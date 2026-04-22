@@ -1,8 +1,8 @@
-FROM node:18 AS build
+FROM node:20 AS build
 
 WORKDIR /app
 
-RUN npm install -g @angular/cli@19.2.5
+RUN npm install -g @angular/cli@21.0.0
 
 COPY package*.json ./
 RUN npm install --force
@@ -11,7 +11,7 @@ COPY . .
 
 RUN ng build --configuration production
 
-FROM node:18 AS final
+FROM node:20 AS final
 
 WORKDIR /usr/src/app
 
