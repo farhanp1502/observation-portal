@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { GenericPopupComponent } from '../shared/generic-popup/generic-popup.component';
-
+import { ChangeDetectorRef } from '@angular/core';
 @Component({
   selector: 'app-downloads',
   standalone: false,
@@ -32,7 +32,8 @@ export class DownloadsComponent {
     private router: Router,
     private dbDownloadService: DbDownloadService,
     private dialog: MatDialog,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private cd: ChangeDetectorRef
   ) {}
 
   async ngOnInit() {
@@ -53,6 +54,7 @@ export class DownloadsComponent {
       key: item.key,
       data: Array.isArray(item.data) ? item.data[0] : item.data
     }));
+    this.cd.detectChanges();
   }
 
   navigateTo(route?: string, type?: string) {

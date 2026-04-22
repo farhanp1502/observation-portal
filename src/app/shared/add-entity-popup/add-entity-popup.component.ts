@@ -21,7 +21,6 @@ export class AddEntityPopupComponent {
   entityToAdd:any;
   filteredEntities: any;
   searchAddEntityValue: string = "";
-  searchEntities: any = [];
   addedEntities: string[] = [];
   loaded:boolean=true;
   searchInputChanged: Subject<string> = new Subject<string>();
@@ -66,7 +65,6 @@ export class AddEntityPopupComponent {
       .subscribe((res: any) => {
         if (res.result) {
           const searchEntities = res?.result?.[0]?.data ?? [];
-          this.searchEntities = searchEntities;
           this.filteredEntities = [...searchEntities];
         } else {
           this.toaster.showToast(res.message, 'Close');

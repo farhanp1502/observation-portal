@@ -10,7 +10,7 @@ export class DownloadDataPayloadCreationService {
       route: `/questionnaire?index=0&submissionId=${solution?.submissionId}&solutionId=${solution?.solutionId}&solutionType=survey`,
       id: solution?.submissionId,
       metaData: {
-        solutionId: solution?._id,
+        solutionId: solution?.solutionId,
         submissionId: solution?.submissionId,
         status: solution?.status,
         statusLabel: solution?.statusLabel

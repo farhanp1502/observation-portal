@@ -1,6 +1,6 @@
 <div class="report-container">
     <div class="header-container">
-        <h1 class="survey-title">{{surveyName}}</h1>
+        <h1 class="survey-title">{{surveyName()}}</h1>
         <div class="button-container">
           <button (click)="openFilterDialog()">
             <mat-icon>tune</mat-icon>
@@ -20,8 +20,7 @@
 
 <div class="list-container">
 
-    <mat-card *ngFor="let question of reportDetails; let qi = index" class="question-card">
-
+    <mat-card *ngFor="let question of reportDetails(); let qi = index " class="question-card">
         <mat-card-header style="background-color: whitesmoke;">
         <mat-card-title style="font-size: 1rem;">{{qi + 1}}. {{ question.question }}</mat-card-title>
         </mat-card-header>
@@ -65,21 +64,21 @@
                         <mat-icon>arrow_forward</mat-icon>
                         <strong>{{ instance.instanceIdentifier }}</strong>
                       </div>
-                      
-                      <div *ngFor="let answer of instance[key].answers" class="instance-answer">
-                        <mat-icon>arrow_right</mat-icon>
-                        <span>{{ checkAnswerValue(answer) }}</span>
-                      </div>
-                    </mat-card>
-                  </div>
+
+                    <div *ngFor="let answer of instance[key].answers" class="instance-answer">
+                      <mat-icon>arrow_right</mat-icon>
+                      <span>{{ checkAnswerValue(answer) }}</span>
+                    </div>
+                  </mat-card>
                 </div>
               </div>
             </div>
-          </ng-container>
-        </mat-card-content>
-        <div class="evidence-section" *ngIf="question.evidences && question.evidences.length">
-            <hr class="evidence-divider" />
-            <h4 class="evidence-title">{{'EVIDENCE'| translate }} {{ question.evidence_count }}</h4>
+          </div>
+        </ng-container>
+      </mat-card-content>
+      <div class="evidence-section" *ngIf="question?.evidences && question?.evidences?.length">
+        <hr class="evidence-divider" />
+            <h4 class="evidence-title">{{ 'EVIDENCE' | translate }} {{ question.evidence_count }}</h4>
             <div class="evidence-icons">
               <ng-container *ngFor="let evidence of question.evidences">
                 <ng-container [ngSwitch]="evidence.extension">
@@ -91,14 +90,13 @@
                 </ng-container>
               </ng-container>
             </div>
-          <div class="view-all-wrapper" *ngIf="question?.evidence_count > 3">
+          <!-- <div class="view-all-wrapper" *ngIf="question?.evidence_count > 3">
             <button class="view-all-link" (click)="allEvidenceClick(question)">
               {{ 'VIEW_ALL_EVIDNECES' | translate }}
              </button>
-            </div>
+            </div> -->
           </div>
-          
       </mat-card>
 </div>
 </div>
-<app-spinner *ngIf="!loaded"></app-spinner>
+<app-spinner *ngIf="!loaded()"></app-spinner>

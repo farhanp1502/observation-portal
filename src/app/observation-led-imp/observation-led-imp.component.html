@@ -1,10 +1,10 @@
 <div class="list-title">
-    <h1 class="heading">{{programName}}</h1>
+    <h1 class="heading">{{ programName() }}</h1>
 </div>
 
 <div class="accordion">
     <mat-accordion>
-        <mat-expansion-panel *ngFor="let imp of improvementProjectSuggestions" class="panel-spacing">
+        <mat-expansion-panel *ngFor="let imp of improvementProjectSuggestions();let i = index" class="panel-spacing">
           <mat-expansion-panel-header>
             <div class="header-flex">
     <span class="title">{{ imp?.criteriaName }}</span>
@@ -19,6 +19,6 @@
       </mat-accordion>
 </div>
 
-<app-spinner *ngIf="!loaded"></app-spinner>
+<app-spinner *ngIf="!loaded()"></app-spinner>
 
   

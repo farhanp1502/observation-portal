@@ -312,6 +312,16 @@
   color:var(--color-grey);
 }
 
+.apply-filter {
+  border-radius: 1.25rem;
+  padding: 0.625rem 0.9375rem;
+  background-color: var(--color-primary) !important;
+  color: var(--color-light);
+  margin: 0.3125rem;
+  border-color: var(--color-secondary);
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   .column:nth-child(odd) {
     text-align: center;

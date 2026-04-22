@@ -1,7 +1,7 @@
 <div class="list-title">
     <div class="list-heading">
       <h1 class="heading">{{ headerConfig?.title | translate}}</h1>
-      <p class="heading-paragraph">{{ headerConfig?.description | translate : { entityType: headerConfig?.type } }}</p>
+      <p class="heading-paragraph">{{ headerConfig?.description | translate : { entityType: headerConfig?.solutionType } }}</p>
     </div>
     @if(!headerConfig?.showSearch){
       <div class="srch">
@@ -11,7 +11,7 @@
           </span>
           <input
             [value]="headerConfig.searchTerm"
-            [placeholder]="headerConfig?.placeholder | translate:{ entity: headerConfig?.type }"
+            [placeholder]="headerConfig?.placeholder | translate:{ entity: headerConfig?.solutionType }"
             [(ngModel)]="searchAddEntityValue"
             (input)="searchInputChanged.next(searchAddEntityValue)"
             class="search-input"

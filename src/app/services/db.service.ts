@@ -47,6 +47,11 @@ export class DbService {
   async getData(key: any): Promise<any> {
     await this.dbInitialized;
   
+    if (!key) {
+    console.error("Invalid key passed to getData:", key);
+    return null;
+  }
+  
     return new Promise((resolve, reject) => {
       try {
         const transaction = this.db.transaction([this.storeName], 'readonly');

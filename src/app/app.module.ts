@@ -51,7 +51,6 @@ import { ObservationAsTaskComponent } from './observation-as-task/observation-as
 import { DeeplinkRedirectComponent } from './deeplink-redirect/deeplink-redirect.component';
 import { MatChipsModule } from '@angular/material/chips';
 import { SurveyReportsComponent } from './survey-reports/survey-reports.component';
-import { SurveyFilterComponent } from './shared/survey-filter/survey-filter.component';
 import { SurveyPreviewComponent } from './shared/survey-preview/survey-preview.component';
 import { DownloadsComponent } from './downloads/downloads.component';
 import { SurveyExpiredComponent } from './survey-expired/survey-expired.component';
@@ -62,13 +61,14 @@ import { MainContentComponent } from './shared/main-content/main-content.compone
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { ShareLinkPopupComponent } from './shared/share-link-popup/share-link-popup.component';
 import { ShortUrlPipe } from './shared/pipes/short-url.pipe';
-import { ObservationFilterComponent } from './shared/observation-filter/observation-filter.component';
 import { DownloadButtonComponent } from './shared/download-button/download-button.component';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { AddEntityPopupComponent } from './shared/add-entity-popup/add-entity-popup.component';
 import { ProfileAlterPopupComponent } from './shared/profile-alter-popup/profile-alter-popup.component';
 import { CleanAnswersPipe } from './pipes/clean-answers.pipe';
 import { NotFoundComponent } from './not-found/not-found.component';
+import { EntityFilterPopupComponent } from './shared/entity-filter-popup/entity-filter-popup.component';
+import { ReportsFilterModal } from './shared/reports-filter-modal/reports-filter-modal';
 
 export function translateHttpLoaderFactory(httpClient: HttpClient) {
   return new TranslateHttpLoader(httpClient, './assets/i18n/', '.json');
@@ -88,7 +88,6 @@ export function translateHttpLoaderFactory(httpClient: HttpClient) {
     ObservationAsTaskComponent,
     DeeplinkRedirectComponent,
     SurveyReportsComponent,
-    SurveyFilterComponent,
     SurveyPreviewComponent,
     DownloadsComponent,
     SurveyExpiredComponent,
@@ -98,12 +97,13 @@ export function translateHttpLoaderFactory(httpClient: HttpClient) {
     MainContentComponent,
     ShareLinkPopupComponent,
     ShortUrlPipe,
-    ObservationFilterComponent,
     DownloadButtonComponent,
     AddEntityPopupComponent,
     ProfileAlterPopupComponent,
     CleanAnswersPipe,
-    NotFoundComponent
+    NotFoundComponent,
+    EntityFilterPopupComponent,
+    ReportsFilterModal
   ],
   imports: [
     BrowserModule,

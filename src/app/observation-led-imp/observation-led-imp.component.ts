@@ -1,9 +1,10 @@
 import { Router } from '@angular/router';
-import { Component } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { ApiService } from '../services/api.service';
 import { ToastService } from '../services/toast.service';
 import * as urlConfig from '../constants/url-config.json';
 import { catchError, finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 
 @Component({
@@ -13,9 +14,10 @@ import { catchError, finalize } from 'rxjs';
   styleUrl: './observation-led-imp.component.css'
 })
 export class ObservationLedImpComponent {
-  improvementProjectSuggestions: any[];
-  programName: any;
-  loaded = true;
+  readonly improvementProjectSuggestions = signal<any[]>([]);
+  readonly programName = signal<any>('');
+  readonly loaded = signal(true);
+  private readonly destroyRef = inject(DestroyRef);
 
 
   constructor(public router: Router,
@@ -24,19 +26,20 @@ export class ObservationLedImpComponent {
     const navigation = this.router.getCurrentNavigation();
     const state = navigation?.extras?.state || {};
 
-    this.improvementProjectSuggestions = state['improvementProjectSuggestions'] || [];
-    this.programName = state['programName'] || '';
+    this.improvementProjectSuggestions.set(state['improvementProjectSuggestions'] || []);
+    this.programName.set(state['programName'] || '');
   }
 
   navigateToProjectPlayer(project: any) {
-    this.loaded = false;
+    this.loaded.set(false);
     this.apiService.get(urlConfig.observation.project + `${project?._id}`)
       .pipe(
-        finalize(() => this.loaded = true),
+        finalize(() => this.loaded.set(true)),
         catchError((err) => {
           this.toaster.showToast(err?.error?.message, 'danger', 5000)
           throw new Error('Could not fetch the details');
-        })
+        }),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((res: any) => {
         let result = res?.result;

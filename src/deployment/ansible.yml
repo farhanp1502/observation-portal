@@ -3,18 +3,23 @@
   vars:
     project_path: /opt/frontend/observation-portal
     root_path: /opt/frontend
+    NVM_DIR: "/home/jenkins/.nvm"
+    NODE_VERSION: "20.19.0"
+
   tasks:
     - name: Slurp host file
       slurp:
         src: "/opt/backend/deployment/.token"
       register: slurpfile
 
-    - name: Run vault credentials
-      shell: "curl --location --request GET '{{ vaultAddress }}elevate-observation-pwa' --header 'X-Vault-Token: {{ slurpfile['content'] | b64decode }}' | jq '.data' > '{{root_path}}/data2.json'"
-      register: vaultCurl
+    - name: Fetch vault data
+      shell: >
+        curl --location --request GET '{{ vaultAddress }}elevate-observation-pwa'
+        --header 'X-Vault-Token: {{ slurpfile["content"] | b64decode }}'
+        | jq '.data' > '{{ root_path }}/data2.json'
 
     - name: Show Vault environment data
-      shell: cat {{root_path}}/data2.json | jq '.data'
+      shell: cat {{ root_path }}/data2.json | jq '.data'
       register: vaultEnvData
 
     - name: Print Vault environment data
@@ -30,47 +35,79 @@
     - name: Clone observation-portal repo
       git:
         repo: https://github.com/ELEVATE-Project/observation-portal
-        dest: "{{project_path}}"
-        version: "{{gitBranch}}"
+        dest: "{{ project_path }}"
+        version: "{{ gitBranch }}"
         force: yes
 
+    - name: Install NVM (if not present)
+      shell: |
+        if [ ! -d "{{ NVM_DIR }}" ]; then
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+        fi
+      args:
+        executable: /bin/bash
+
+    - name: Install and use Node {{ NODE_VERSION }}
+      shell: |
+        export NVM_DIR="{{ NVM_DIR }}"
+        . "$NVM_DIR/nvm.sh"
+        nvm install {{ NODE_VERSION }}
+        nvm use {{ NODE_VERSION }}
+        nvm alias default {{ NODE_VERSION }}
+      args:
+        executable: /bin/bash
+
+    - name: Verify Node version
+      shell: |
+        export NVM_DIR="{{ NVM_DIR }}"
+        . "$NVM_DIR/nvm.sh"
+        nvm use {{ NODE_VERSION }}
+        node -v
+      args:
+        executable: /bin/bash
+
     - name: Install dependencies
-      shell: cd {{project_path}} && npm i --force
+      shell: |
+        export NVM_DIR="{{ NVM_DIR }}"
+        . "$NVM_DIR/nvm.sh"
+        nvm use {{ NODE_VERSION }}
+        cd {{ project_path }}
+        npm ci --legacy-peer-deps
+      args:
+        executable: /bin/bash
 
     - name: Set permission for env script
       shell: chmod 744 {{ project_path }}/src/scripts/json2env.sh
 
     - name: Generate environment.ts
       shell: |
-        cat {{root_path}}/data2.json | jq '.data' > {{ project_path }}/src/environments/environment.ts &&
+        cat {{ root_path }}/data2.json | jq '.data' > {{ project_path }}/src/environments/environment.ts &&
         sed -i '1s/^/export const environment = \n/' {{ project_path }}/src/environments/environment.ts
       register: envConfig
 
-    - debug: msg=" cred {{ envConfig }} "
-
-    - name: Change directory
-
-      shell: chdir {{project_path}}
-
-    - name: Change directory
-
-      shell: cd {{project_path}}
+    - debug:
+        msg: "{{ envConfig }}"
 
     - name: Fetch pm2 config file
-
-      shell: "curl --location --request GET '{{ vaultAddress }}observationPortalPm2Config' --header 'X-Vault-Token: {{ slurpfile['content'] | b64decode }}' | jq '.data.data' > '{{ project_path }}/pm2.config.json'"
-
-      register: pm2
+      shell: >
+        curl --location --request GET '{{ vaultAddress }}observationPortalPm2Config'
+        --header 'X-Vault-Token: {{ slurpfile["content"] | b64decode }}'
+        | jq '.data.data' > '{{ project_path }}/pm2.config.json'
 
     - name: Remove dist folder
-
-      shell: rm -rf dist
+      shell: rm -rf {{ project_path }}/dist
 
     - name: Build angular portal
-
-      shell: cd {{project_path}} && ng build --configuration production
+      shell: |
+        export NVM_DIR="{{ NVM_DIR }}"
+        . "$NVM_DIR/nvm.sh"
+        nvm use {{ NODE_VERSION }}
+        cd {{ project_path }}
+        npx ng build --configuration production
+      args:
+        executable: /bin/bash
 
     - name: Start pm2
-
-      shell: cd {{project_path}} && pm2 start pm2.config.json
-
+      shell: |
+        cd {{ project_path }}
+        pm2 start pm2.config.json
