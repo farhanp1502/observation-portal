@@ -8,7 +8,7 @@ const buildPath = path.join(__dirname, 'dist', 'observation-portal', 'browser');
 app.use('/observations',express.static(buildPath));
 
 // Fallback to index.html for SPA routing
-app.get('/observations/*', (req, res) => {
+app.get('/observations/*path', (req, res) => {
   res.sendFile(path.join(buildPath, 'index.html'));
 });
 

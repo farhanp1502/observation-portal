@@ -1,12 +1,11 @@
-
-<div *ngIf="loaded">
-  <mat-tab-group mat-stretch-tabs="true" [(selectedIndex)]="selectedTabIndex" class="mb-5" (selectedTabChange)="toggleTabs($event)">
+<div *ngIf="loaded(); else loadingTpl">
+  <mat-tab-group mat-stretch-tabs="true" [selectedIndex]="selectedTabIndex()" (selectedIndexChange)="selectedTabIndex.set($event)" class="mb-5" (selectedTabChange)="toggleTabs($event)">
 
     <mat-tab [label]="'IN_PROGRESS' | translate">
       <div class="observation-list">
         <div class="grid-container">
-          <ng-container *ngIf="filteredObservations?.length; else noDataInProgress">
-            <div class="grid-item" *ngFor="let entity of filteredObservations">
+          <ng-container *ngIf="filteredObservations().length; else noDataInProgress">
+            <div class="grid-item" *ngFor="let entity of filteredObservations()">
               <mat-card class="observation-card" (click)="navigateToDetails(entity)">
                 <div class="card-content-container">
                   <mat-card-content class="observation-content">
@@ -16,15 +15,15 @@
 
                   </mat-card-content>
   
-                  <div class="actions-buttons" *ngIf="!entity?.isRubricDriven || allowMultipleAssessemts == 'true'">
-                    <div class="download-wrapper" [ngClass]="{ 'margin-right-spacing': (!entity?.isRubricDriven || allowMultipleAssessemts == 'false') }" *ngIf="submissionIdSet.has(entity?._id)">
+                  <div class="actions-buttons" *ngIf="!entity?.isRubricDriven || allowMultipleAssessemts() == 'true'">
+                    <div class="download-wrapper" [ngClass]="{ 'margin-right-spacing': (!entity?.isRubricDriven || allowMultipleAssessemts() == 'false') }" *ngIf="submissionIdSet().has(entity?._id)">
                       <button mat-icon-button (click)="$event.stopPropagation()" class="download-btn">
                         <mat-icon class="downloaded">check</mat-icon>
                       </button>
                       <p class="downloaded-text download-text">{{'DOWNLOADED' | translate}}</p>
                     </div>
                     
-                    <div class="download-wrapper" *ngIf="!submissionIdSet.has(entity?._id)" [ngClass]="{ 'margin-right-spacing': (!entity?.isRubricDriven || allowMultipleAssessemts == 'false') }">
+                    <div class="download-wrapper" *ngIf="!submissionIdSet().has(entity?._id)" [ngClass]="{ 'margin-right-spacing': (!entity?.isRubricDriven || allowMultipleAssessemts() == 'false') }">
                       <button mat-icon-button (click)="dialogMessage('downloadPop',entity); $event.stopPropagation()" class="download-btn">
                         <mat-icon>arrow_downward</mat-icon>
                       </button>
@@ -53,8 +52,8 @@
     <mat-tab [label]="'COMPLETED' | translate">
       <div class="observation-list">
         <div class="grid-container">
-          <ng-container *ngIf="filteredObservations?.length; else noDataCompleted">
-            <div class="grid-item" *ngFor="let entity of filteredObservations">
+          <ng-container *ngIf="filteredObservations().length; else noDataCompleted">
+            <div class="grid-item" *ngFor="let entity of filteredObservations()">
               <mat-card class="observation-card" (click)="navigateToDetails(entity)">
                 <div class="card-content-container">
                   <mat-card-content class="observation-content">
@@ -76,21 +75,21 @@
   </mat-tab-group>
   
   <div class="fixed-bottom-buttons">
-    <button mat-raised-button (click)="dialogMessage('observeAgain')" *ngIf="allowMultipleAssessemts == 'true' && isPendingTabSelected">{{"OBSERVE_AGIAN" | translate}}</button>
-    <button mat-raised-button color="accent" (click)="viewReport()" *ngIf="!isPendingTabSelected && filteredObservations?.length > 0">{{"VIEW_REPORT" | translate}}</button>
+    <button mat-raised-button (click)="dialogMessage('observeAgain')" *ngIf="allowMultipleAssessemts() == 'true' && isPendingTabSelected()">{{"OBSERVE_AGAIN" | translate}}</button>
+    <button mat-raised-button color="accent" (click)="viewReport()" *ngIf="!isPendingTabSelected() && filteredObservations().length > 0">{{"VIEW_REPORT" | translate}}</button>
   </div>
 </div>
 
-
-<app-spinner *ngIf="!loaded"></app-spinner>
-
+<ng-template #loadingTpl>
+  <app-spinner></app-spinner>
+</ng-template>
 
 <ng-template #updateDialogModel>
 <h1 mat-dialog-title>{{'INSTANCE_NAME' | translate}}</h1>
 
 <mat-dialog-content>
   <mat-form-field appearance="fill" style="width: 100%;">
-    <input matInput [(ngModel)]="observationName" [placeholder]="'ENTER_NAME_PLACEHOLDER' | translate">
+    <input matInput [ngModel]="observationName()" (ngModelChange)="observationName.set($event)" [placeholder]="'ENTER_NAME_PLACEHOLDER' | translate">
   </mat-form-field>
 </mat-dialog-content>
 

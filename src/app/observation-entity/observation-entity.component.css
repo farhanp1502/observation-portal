@@ -17,25 +17,6 @@
     border: none;
 }
 
-.btn {
-    background-color: var(--primary-color);
-    color: var(--general-btn-text-color);
-    border: solid transparent 0.063rem;
-    border-radius: 0.25rem;
-    padding: 0.75rem;
-    min-width: 5.6rem;
-    min-height: 2.5rem;
-    font-size: 0.875rem;
-    font-weight: 700;
-}
-
-.btn:hover {
-    background-color: var(--general-btn-hover-bg);
-    color: var(--primary-color);
-    border: solid var(--primary-color) 0.063rem;
-}
-
-
 .card-content {
     display: flex;
     justify-content: space-between;
@@ -46,10 +27,6 @@
     background-color: var(--primary-color);
     color: var(--general-btn-text-color);
     border: none;
-}
-
-.search {
-    margin-top: 0.313rem;
 }
 
 .delete-btn {
@@ -75,29 +52,6 @@
     visibility: hidden;
 }
 
-.mat-mdc-list-option,
-.mat-mdc-list-option.mat-accent {
-    --mdc-checkbox-selected-icon-color: var(--primary-color);
-    --mdc-checkbox-selected-hover-icon-color: var(--color-secondary);
-}
-
-.heading {
-    font-size: 1.563rem;
-}
-
-.heading-paragraph {
-    margin-bottom: 1.563rem;
-}
-
-.search-add-entity {
-    height: 2.938rem !important;
-}
-
-  img {
-    width: 50%;
-    max-width: 18.75rem;
-    }
-
   .disabled-button {
     background-color: var(--disabled-btn-bg) !important;
     color: var(--disabled-btn-text) !important;
@@ -118,11 +72,5 @@
   }
   .observation-list {
     padding: 1rem;
-  }
-  .center-dialog-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
   }
   

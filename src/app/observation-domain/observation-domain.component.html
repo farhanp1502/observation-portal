@@ -2,13 +2,13 @@
     <div>
         <h1 class="heading">{{"DOMAINS"|translate}}</h1>
     </div>
-    <div class="download-wrapper" *ngIf="observationDownloaded">
+    <div class="download-wrapper" *ngIf="observationDownloaded()">
         <button mat-icon-button (click)="$event.stopPropagation()" class="download-btn">
             <mat-icon>check</mat-icon>
           </button>
           <p class="download-text">{{'DOWNLOADED'|translate}}</p>
     </div>
-    <div class="download-wrapper" *ngIf="!observationDownloaded">
+    <div class="download-wrapper" *ngIf="!observationDownloaded()">
         <button mat-icon-button (click)="downloadPop()" class="download-btn">
             <mat-icon>arrow_downward</mat-icon>
           </button>
@@ -16,15 +16,15 @@
     </div>
 </div>
 
-<div *ngIf="loaded" class="domain-content">
-  @if(evidences?.length > 0){
-    <div class="domain-container" *ngFor="let entity of evidences; let i = index">
+<div *ngIf="loaded(); else loadingTpl" class="domain-content">
+  @if(evidences()?.length){
+    <div class="domain-container" *ngFor="let entity of evidences(); let i = index">
       <mat-card (click)="toggleExpand(entity)" [ngClass]="{ 'restrict': entity?.notApplicable === true }" appearance="outlined" class="domain-card">
         <mat-card-header class="d-flex justify-center align-center">
           <div class="card-header">
             <h2 class="observation-name">{{ entity?.name }}</h2>
               <div class="card-right">
-                <button class="not-applicable primary-btn" *ngIf="(entity?.canBeNotAllowed && !(entity.progressStatus && (entity.progressStatus === 'completed' || entity.progressStatus === 'inProgress') )) && !entity.notApplicable" (click)="notApplicable(entity,i); $event.stopPropagation()">{{'NOT_APPLICABLE' | translate}}</button>
+                <button class="not-applicable primary-btn" *ngIf="(entity?.canBeNotAllowed && !entity.progressStatus) && !entity.notApplicable" (click)="notApplicable(entity, i); $event.stopPropagation()">{{'NOT_APPLICABLE' | translate}}</button>
                 <mat-icon>{{entity?.show ? 'expand_less' : 'expand_more' }}</mat-icon>
               </div>
           </div>
@@ -40,7 +40,7 @@
               </p>
               }
             </div>
-                    
+
             <div class="progress-container">
               <div class="progress-box">
                 <span class="progress-text" *ngIf="!entity?.notApplicable">{{ entity?.isSubmitted ? 100 : (entity?.completePercentage || 0) }}%</span>
@@ -87,8 +87,9 @@
   }
 </div>
 
-<app-spinner *ngIf="!loaded"></app-spinner>
-
+<ng-template #loadingTpl>
+<app-spinner></app-spinner>
+</ng-template>
 
 <ng-template #notApplicableModel>
   <div class="p-16 flex flex-col items-center justify-center">
@@ -96,14 +97,14 @@
     <mat-dialog-content>
         <p>{{ 'ADD_REMARKS' | translate }}</p>
         <mat-form-field appearance="fill" style="width: 100%;">
-            <input matInput [(ngModel)]="remark" [placeholder]="'ENTER_REMARK' | translate">
+          <input matInput [ngModel]="remark()" (ngModelChange)="remark.set($event)" [placeholder]="'ENTER_REMARK' | translate">
         </mat-form-field>
     </mat-dialog-content>
 
     <mat-dialog-actions class="mat-dialog-actions">
       <button mat-dialog-close="cancel" class="secondary-btn">{{"CANCEL"| translate}}</button>
         <button [mat-dialog-close]="'add'" class="primary-btn"
-            [disabled]="!remark" [ngClass]="{'disabled-button': !remark}">{{"ADD" | translate}}</button>
+            [disabled]="!remark()" [ngClass]="{'disabled-button': !remark() }">{{"ADD" | translate}}</button>
     </mat-dialog-actions>
   </div>
 </ng-template>

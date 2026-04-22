@@ -1,15 +1,15 @@
-import { Component, TemplateRef, ViewChild } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ApiService } from '../services/api.service';
 import * as urlConfig from '../constants/url-config.json';
 import { ToastService } from '../services/toast.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { FormControl } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { catchError, finalize } from 'rxjs';
 import { UrlParamsService } from '../services/urlParams.service';
 import { GenericPopupComponent } from '../shared/generic-popup/generic-popup.component';
 import { AddEntityPopupComponent } from '../shared/add-entity-popup/add-entity-popup.component';
 import { UtilsService } from '../services/utils.service';
+import { RouterService } from '../services/router.service';
 @Component({
   selector: 'app-observation-entity',
   standalone: false,
@@ -17,32 +17,29 @@ import { UtilsService } from '../services/utils.service';
   styleUrl: './observation-entity.component.css'
 })
 export class ObservationEntityComponent  {
-  selectedEntities: any;
-  solutionId: any;
-  entityToAdd: string;
-  filteredEntitiesOne: any;
-  addedEntities: string[] = [];
-  entities = new FormControl();
-  dialogRef: any;
-  observationId: any;
-  loaded = false;
-  headerConfig:any;
+  selectedEntities = signal<any>(null);
+  solutionId = signal<string>('');
+  entityToAdd = signal<string>('entity');
+  filteredEntitiesOne = signal<any[]>([]);
+  observationId = signal<string>('');
+  loaded = signal(false);
+  headerConfig = signal<any>(null);
 
 
   constructor(
-    private apiService: ApiService, 
-    private toaster: ToastService, 
-    private router: Router, 
+    private apiService: ApiService,
+    private toaster: ToastService,
     private dialog: MatDialog,
     private urlParamsService:UrlParamsService,
     private route: ActivatedRoute,
     private utils:UtilsService,
+    private navigate:RouterService
   ) {}
 
   async ngOnInit() {
     this.urlParamsService.parseRouteParams(this.route);
-    this.solutionId = this.urlParamsService?.solutionId;
-    this.entityToAdd=this.urlParamsService?.entityType || "entity";
+    this.solutionId.set(this.urlParamsService?.solutionId || '');
+    this.entityToAdd.set(this.urlParamsService?.entityType || 'entity');
     this.setHeaderConfig();
     try {
       if (!this.apiService?.profileData) {
@@ -53,18 +50,18 @@ export class ObservationEntityComponent  {
         err?.error?.message ?? 'PROFILE FETCH FAILED',
         'danger'
       );
-      this.loaded = true;
-      return; 
+      this.loaded.set(true);
+      return;
     }
     this.getEntities();
   }
 
    getEntities() {
-    this.selectedEntities = [];
-    this.observationId = "";
-    this.apiService.post(urlConfig.observation.getSelectedEntities + this.solutionId, this.apiService.profileData)
+    this.selectedEntities.set(null);
+    this.observationId.set('');
+    this.apiService.post(urlConfig.observation.getSelectedEntities + this.solutionId(), this.apiService.profileData)
       .pipe(
-        finalize(() => this.loaded = true),
+        finalize(() => this.loaded.set(true)),
         catchError((err: any) => {
           this.toaster.showToast(err.error.message,'danger');
           throw Error(err);
@@ -72,10 +69,10 @@ export class ObservationEntityComponent  {
       )
       .subscribe((res: any) => {
         if (res.status == 200) {
-          this.observationId = res?.result?._id;
-          this.selectedEntities = res?.result;
-          this.filteredEntitiesOne = [...(this.selectedEntities?.entities ?? [])];
-          this.entityToAdd=res?.result?.entityType || "entity";
+          this.observationId.set(res?.result?._id || '');
+          this.selectedEntities.set(res?.result);
+          this.filteredEntitiesOne.set([...(res?.result?.entities ?? [])]);
+          this.entityToAdd.set(res?.result?.entityType || 'entity');
           this.setHeaderConfig();
         } else {
           this.toaster.showToast(res.message, 'danger');
@@ -87,13 +84,13 @@ export class ObservationEntityComponent  {
     const dialogRef = this.dialog.open(AddEntityPopupComponent, {
           width: '80%',
           height: 'auto',
-          data: { 
-            entityToAdd: this.entityToAdd,
-            observationId:this.observationId,
-            selectedEntities:this.selectedEntities
-          }  
+          data: {
+            entityToAdd: this.entityToAdd(),
+            observationId:this.observationId(),
+            selectedEntities:this.selectedEntities()
+          }
         });
-      
+
         dialogRef.afterClosed().subscribe((result) => {
           if (result) {
             this.updateEntities(result);
@@ -102,7 +99,7 @@ export class ObservationEntityComponent  {
   }
 
   updateEntities(selectedEntities) {
-    this.apiService.post(urlConfig.observation.updateEntities + this.observationId, { data: selectedEntities })
+    this.apiService.post(urlConfig.observation.updateEntities + this.observationId(), { data: selectedEntities })
       .subscribe((res: any) => {
         if (res.status == 200) {
           this.getEntities();
@@ -115,23 +112,19 @@ export class ObservationEntityComponent  {
   }
 
   handleEntitySearchInput(value?: any) {
-    this.headerConfig.searchTerm = value;
-    this.filteredEntitiesOne = this.selectedEntities?.entities.filter((item: any) =>
-      item?.name.toLowerCase().includes(this.headerConfig.searchTerm)
+    const searchTerm = (value || '').toLowerCase();
+    this.headerConfig.update((config: any) => ({
+      ...config,
+      searchTerm
+    }));
+    this.filteredEntitiesOne.set(
+      (this.selectedEntities()?.entities || []).filter((item: any) =>
+        item?.name?.toLowerCase().includes(searchTerm)
+      )
     );
   }
   navigateToDetails(data) {
-    this.router.navigate([
-      'details',
-      this.observationId,
-      data?._id,
-      this.selectedEntities?.allowMultipleAssessemts
-    ],{
-      queryParams:{
-        'name':data?.name,
-        'submissionId': data?.submissionId,
-      }
-    });
+    this.navigate.navigation(['details',this.observationId(), data?._id, this.selectedEntities()?.allowMultipleAssessemts],{name:data?.name,submissionId: data?.submissionId})
   }
 
 
@@ -141,18 +134,17 @@ export class ObservationEntityComponent  {
       data: {
         title: 'CONFIRM_DELETION',
         message: 'CONFIRM_DELETE',
-        entityType: this.selectedEntities?.entityType
+        entityType: this.selectedEntities()?.entityType
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result === 'yes') {
-        this.apiService.delete(urlConfig.observation.updateEntities + this.observationId, { data: [id] })
+        this.apiService.delete(urlConfig.observation.updateEntities + this.observationId(), { data: [id] })
 
           .subscribe((res: any) => {
             if (res.status == 200) {
               this.toaster.showToast(res.message, 'success', 5000);
-              this.addedEntities = [];
               this.getEntities();
             } else {
               this.toaster.showToast(res.message, 'Close');
@@ -165,14 +157,14 @@ export class ObservationEntityComponent  {
   }
 
   setHeaderConfig(){
-    this.headerConfig = {
+    this.headerConfig.set({
       title:decodeURIComponent(decodeURIComponent(this.urlParamsService?.name || '')),
       description:'SELECT_ENTITY_FROM_LIST',
       placeholder:'SEARCH_ENTITY_PLACEHOLDER',
       searchTerm:'',
       showSearch:false,
-      type:this.entityToAdd
-    }
+      solutionType:this.entityToAdd()
+    })
   }
-  
+
 }

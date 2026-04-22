@@ -9,16 +9,8 @@ import { environment } from 'src/environments/environment';
 })
 export class ApiService {
   public baseUrl:string=environment.surveyBaseURL;
-  public token:string;
   public profileData:any=JSON.parse(localStorage.getItem('profileData'));
-  public solutionId :any; 
-  public entityType:any
   public userAuthToken:any=localStorage.getItem('accToken');
-  public entityId:any;
-  public submissionNumber:any;
-  public evidenceCode:any;
-  public index:any;
-  public fileSizeLimit:any;
 
   constructor(private http:HttpClient) { }
 

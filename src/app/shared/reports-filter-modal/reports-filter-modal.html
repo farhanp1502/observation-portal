@@ -1,0 +1,39 @@
+<div class="custom-dialog-backdrop">
+  <div class="custom-dialog">
+
+    <div class="dialog-header">
+      <h3>{{ title | translate }}</h3>
+      <button mat-icon-button class="close-button" (click)="close()" aria-label="Close">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <hr class="custom-divider" />
+
+
+    <div class="dialog-body">
+      <ul class="question-list">
+        @for (question of allQuestions; track question.id) {
+        <li>
+          <label>
+            <input type="checkbox" [(ngModel)]="question.selected" />
+            {{ question[labelKey] }}
+          </label>
+        </li>
+        }
+      </ul>
+    </div>
+
+    <div class="dialog-footer">
+
+     <button class="btn primary" (click)="applyFilter()">
+          {{ "APPLY_FILTER" | translate }}
+        </button>
+        <button class="btn outlined" (click)="resetFilter()">
+          {{ "RESET_FILTER" | translate }}
+        </button>
+
+    </div>
+
+  </div>
+</div>

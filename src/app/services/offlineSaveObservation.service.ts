@@ -34,7 +34,9 @@ export class offlineSaveObservation {
         )
         .subscribe(async (res: any) => {
           if (res?.result) {
-            await this.setDataInIndexDb(res?.result, submissionId);
+            let responseData = res.result;
+
+            await this.setDataInIndexDb(responseData, responseData?.assessment?.submissionId || submissionId);
             resolve(res.result);
           } else {
             this.toaster.showToast(res?.message, 'danger');

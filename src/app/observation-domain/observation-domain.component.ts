@@ -1,10 +1,9 @@
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component,  OnInit, TemplateRef, ViewChild, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../services/api.service';
 import { ToastService } from '../services/toast.service';
 import * as urlConfig from '../constants/url-config.json';
 import { MatDialog } from '@angular/material/dialog';
-import { catchError, finalize } from 'rxjs';
 import { UrlParamsService } from '../services/urlParams.service';
 import { offlineSaveObservation } from '../services/offlineSaveObservation.service';
 import { DownloadService } from '../services/download.service';
@@ -19,27 +18,25 @@ import { DownloadDataPayloadCreationService } from '../services/download-data-pa
   styleUrl: './observation-domain.component.css'
 })
 export class ObservationDomainComponent implements OnInit {
-  entityId: any;
-  entityName: any;
-  entityToAdd: any;
-  observations: any = [];
-  evidences: any;
-  expandedIndex: number | null = null;
-  remark: any = "";
-  observationId: any = "";
-  id: any = "";
-  entities:any=[]
+  entityId = signal<any>('');
+  observations = signal<any[]>([]);
+  evidences = signal<any[]>([]);
+  expandedIndex = signal<number | null>(null);
+  remark = signal('');
+  observationId = signal<any>('');
+  id = signal<any>('');
+  entities = signal<any[]>([]);
+  loaded = signal(false);
+  submissionNumber = signal<any>(null);
+  submissionId = signal<any>('');
+  stateData = signal<any>(null);
+  observationDownloaded = signal(false);
+  isQuestionerDataInIndexDb = signal<any>(null);
+  isDataInDownloadsIndexDb = signal<any[]>([]);
+  observationDetails = signal<any>(null);
+
   @ViewChild('notApplicableModel') notApplicableModel: TemplateRef<any>;
-  loaded = false;
-  submissionNumber:any;
-  submissionId: any;
-  completeObservationData: any;
-  stateData:any;
-  observationDownloaded: boolean = false;
-  isQuestionerDataInIndexDb: any;
-  isDataInDownloadsIndexDb: any = [];
-  observationDetails: any
-  confirmModel:any;
+  private initTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private apiService: ApiService, 
@@ -56,95 +53,90 @@ export class ObservationDomainComponent implements OnInit {
      
   ) {
     const passedData = this.router.getCurrentNavigation()?.extras.state;
-    this.observationDetails = passedData;
+    this.observationDetails.set(passedData);
   }
 
   async ngOnInit() {
    setTimeout(async () => {
     window.addEventListener('message', this.handleMessage);
-    this.stateData = history.state?.data;
-    if(this.stateData){
-      this.mapDataToVariables(this.stateData)
+    this.stateData.set(history.state?.data)
+    if(this.stateData()) {
+      this.mapDataToVariables(this.stateData());
     }else{
-      this.urlParamsService.parseRouteParams(this.route)
-    this.observationId = this.urlParamsService?.observationId;
-    this.entityId = this.urlParamsService?.entityId;
-    this.id = this.urlParamsService?.solutionId;
-    this.submissionId = this.urlParamsService?.solutionId;
+      this.urlParamsService.parseRouteParams(this.route);
+    this.observationId.set(this.urlParamsService?.observationId);
+    this.entityId.set(this.urlParamsService?.entityId);
+    this.id.set(this.urlParamsService?.solutionId);
+    this.submissionId.set(this.urlParamsService?.solutionId);
 
-    this.isQuestionerDataInIndexDb = await this.offlineData.checkAndMapIndexDbDataToVariables(this.submissionId);
+    this.isQuestionerDataInIndexDb.set( await this.offlineData.checkAndMapIndexDbDataToVariables(this.submissionId()));
 
-      this.isDataInDownloadsIndexDb = await this.downloadService.checkAndFetchDownloadsData(this.observationId, "observation");
+      this.isDataInDownloadsIndexDb.set((await this.downloadService.checkAndFetchDownloadsData(this.observationId(),"observation")) || []);
       
-      if (this.isQuestionerDataInIndexDb?.data) {
-        this.mapDataToVariables(this.isQuestionerDataInIndexDb?.data)
+      if (this.isQuestionerDataInIndexDb()?.data) {
+        this.mapDataToVariables(this.isQuestionerDataInIndexDb()?.data)
           
       }
 
-      if (Array.isArray(this.isDataInDownloadsIndexDb) && this.isDataInDownloadsIndexDb.length > 0) {
-        const existingIndex = this.isDataInDownloadsIndexDb.findIndex(
+        const downloads = this.isDataInDownloadsIndexDb();
+        if (Array.isArray(downloads) && downloads.length > 0) {
+        const existingIndex = downloads.findIndex(
           (item: any) => 
-            item.metaData.submissionId === this.submissionId &&
-          item.metaData.entityId === this.entityId
+            item.metaData.submissionId === this.submissionId() &&
+          item.metaData.entityId === this.entityId()
         );
-
-        if (existingIndex !== -1) {
-        this.observationDownloaded = true;
-
+        this.observationDownloaded.set(existingIndex !== -1);
         } else {
-        this.observationDownloaded = false;
-        }
-      }else{
-        this.observationDownloaded = false;
+        this.observationDownloaded.set(false);
       }
     }
    }, 500);
   }
 
+
   mapDataToVariables(observationData) {
-    this.entities = observationData?.assessment?.evidences;
-    this.evidences = this.entities;
-    this.evidences.forEach((element: any) => {
-      element.show = false;
-    });
-    this.loaded = true
+    const mappedEntities = observationData?.assessment?.evidences || [];
+    this.entities.set(mappedEntities);
+    this.evidences.set(mappedEntities.map((element: any) => ({ ...element, show: false })));
+    this.loaded.set(true);
   }
 
   toggleExpand(entity:any){
-    this.evidences = this.evidences.map((element: any) => {
-      return {
+    this.evidences.update((items) =>
+      items.map((element: any) => ({
         ...element,
         show: element.code === entity.code ? !element.show : false
-      };
-    });
+      }))
+    );
   }
 
   getObservationsByStatus(statuses: ('All' | 'draft' | 'completed' | 'started')[]) {
-    if (!this.observations) {
+    const observations = this.observations();
+    if (!observations.length) {
       return [];
     }
     return statuses.includes('All')
-      ? this.observations
-      : this.observations.filter(obs => statuses.includes(obs.status));
+      ? observations
+      : observations.filter((obs: any) => statuses.includes(obs.status));
   }
 
   toggleAccordion(index: number) {
-    this.expandedIndex = this.expandedIndex === index ? null : index;
+    this.expandedIndex.set(this.expandedIndex() === index ? null : index);
   }
 
   navigateToDetails(data,sectionIndex,entityIndex,notApplicable) {
     if(notApplicable){
       return;
     }
-    this.stateData ? this.statenavigation(entityIndex) :
+    this.stateData() ? this.statenavigation(entityIndex) :
       this.router.navigate(['questionnaire'], {
         queryParams: { 
-          observationId:this.observationId,  
-          entityId:this.entityId, 
-          submissionNumber:this.submissionNumber, 
+          observationId:this.observationId(),
+          entityId:this.entityId(),
+          submissionNumber:this.submissionNumber(),
           evidenceCode:data?.code, 
           index:entityIndex, 
-          submissionId: this.submissionId,
+          submissionId: this.submissionId(),
           sectionIndex:sectionIndex
         },
         state: { data: {
@@ -157,18 +149,18 @@ export class ObservationDomainComponent implements OnInit {
     // await this.router.navigate(['/listing/observation'],{replaceUrl:true});
     this.router.navigate(['questionnaire'], {
       queryParams:{
-        solutionType:this.stateData?.solutionType,
+        solutionType:this.stateData()?.solutionType,
         sectionIndex:entityIndex
       },
       state:{data:{
-        ...this.stateData,
+        ...this.stateData(),
         isSurvey:false
       }}
     })
   }
 
   notApplicable(entity,selectedIndex) {
-    this.remark = "";
+    this.remark.set('');
     const dialogRefEcm = this.dialog.open(GenericPopupComponent,{
       width: '400px',
       data: {
@@ -185,7 +177,7 @@ export class ObservationDomainComponent implements OnInit {
           if (result === 'add') {
             const evidence = {
               externalId: entity?.code,
-              remarks: this.remark,
+              remarks: this.remark(),
               notApplicable: true
             };
             this.updateEntity(evidence,selectedIndex);
@@ -202,15 +194,15 @@ export class ObservationDomainComponent implements OnInit {
       },
       ...this.apiService.profileData
     }
-    this.apiService.post(urlConfig.observation.update + this.id, payload).subscribe(async (res: any) => {
+    this.apiService.post(urlConfig.observation.update + this.id(), payload).subscribe(async (res: any) => {
       if (res.status == 200) {
-      let data: any = await this.offlineData.checkAndMapIndexDbDataToVariables(this.submissionId);
+      let data: any = await this.offlineData.checkAndMapIndexDbDataToVariables( this.submissionId());
       if (data?.data?.assessment?.evidences?.[code]) {
         data.data.assessment.evidences[code].notApplicable = true;
-        await this.db.updateDB(data?.data,this.submissionId)
-        this.isQuestionerDataInIndexDb = await this.offlineData.checkAndMapIndexDbDataToVariables(this.submissionId);
-        if(this.isQuestionerDataInIndexDb?.data){
-          this.mapDataToVariables(this.isQuestionerDataInIndexDb?.data)
+        await this.db.updateDB(data?.data,this.submissionId());
+        this.isQuestionerDataInIndexDb.set( await this.offlineData.checkAndMapIndexDbDataToVariables(this.submissionId()));
+        if(this.isQuestionerDataInIndexDb()?.data){
+          this.mapDataToVariables(this.isQuestionerDataInIndexDb()?.data)
         }
       }
         } else {
@@ -222,17 +214,17 @@ export class ObservationDomainComponent implements OnInit {
 
   }
   async downloadObservation() {
-    const submissionId = this.observationDetails?._id ?? this.submissionId;
-  
+    const details = this.observationDetails() || {};
+    const submissionId = details?._id ?? this.submissionId()
     let isDataInIndexDb: any = await this.offlineData.checkAndMapIndexDbDataToVariables(submissionId);
   
     if (!isDataInIndexDb?.data) {
       const fetched = await this.offlineData.getFullQuestionerData(
-        "observation",
-        this.observationId,
-        this.entityId,
+        'observation',
+        this.observationId(),
+        this.entityId(),
         submissionId,
-        this.observationDetails?.submissionNumber,
+        details?.submissionNumber,
         ""
       );
   
@@ -245,21 +237,18 @@ export class ObservationDomainComponent implements OnInit {
     }
   
     const subTitle =
-      isDataInIndexDb?.assessment?.description ??
-      this.observationDetails?.description ??
-      "";
-  
+      isDataInIndexDb?.assessment?.description ?? details?.description ??"";
     const newItem = this.downloadDataPayloadCreationService.buildObservationItem(
-      this.observationDetails,
-      this.observationId,
-      this.entityId,
-      this.observationDetails?.allowMultipleAssessemts,
+      details,
+      this.observationId(),
+      this.entityId(),
+      details?.allowMultipleAssessemts,
       submissionId,
       subTitle
     );
   
     await this.downloadService.downloadData("observation", newItem);
-    this.observationDownloaded = true;
+    this.observationDownloaded.set(true);
   }
   
   downloadPop() {

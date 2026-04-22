@@ -1,0 +1,20 @@
+<div class="modal">
+    <div class="modal-content">
+      <header class="d-flex align-items-center">
+        <h1 class="modal-title">{{'SELECT_ENTITY' | translate}}</h1>
+        <mat-icon class="close-btn" (click)="onClose()">close</mat-icon>
+      </header>
+        <ul>
+          <li *ngFor="let question of data.entities; let i = index">
+            <input type="radio" [(ngModel)]="selectedEntityName" class="modal-input" [id]="'question-' + i"
+              [value]="question.name" (change)="onEntityChange(i)">
+            <label [for]="'question-' + i">
+              {{ question.name }}
+            </label>
+          </li>
+        </ul>
+      <footer class="question-footer">
+        <button (click)="applyFilter()" class="apply">{{"SUBMIT" | translate}}</button>
+      </footer>
+    </div>
+</div>

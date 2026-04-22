@@ -185,3 +185,37 @@ body{
       grid-template-columns: 1fr;
     }
   }
+
+
+.mat-mdc-snack-bar-container.success .mdc-snackbar__surface {
+  background-color: #4caf50 !important;
+  color: #ffffff !important;
+}
+
+.mat-mdc-snack-bar-container.danger .mdc-snackbar__surface,
+.mat-mdc-snack-bar-container.error .mdc-snackbar__surface {
+  background-color: #f44336 !important;
+  color: #ffffff !important;
+}
+
+.mat-mdc-snack-bar-container.warning .mdc-snackbar__surface {
+  background-color: #ff9800 !important;
+  color: #000000 !important;
+}
+
+.mat-mdc-snack-bar-container.info .mdc-snackbar__surface {
+  background-color: #2196f3 !important;
+  color: #ffffff !important;
+}
+
+.mat-mdc-snack-bar-container.default .mdc-snackbar__surface {
+  background-color: #323232 !important;
+  color: #ffffff !important;
+}
+
+.mat-mdc-snack-bar-container.Close .mdc-snackbar__surface {
+  background-color: #323232 !important;
+  color: #ffffff !important;
+}
+
+

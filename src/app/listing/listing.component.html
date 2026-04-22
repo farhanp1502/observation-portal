@@ -1,14 +1,14 @@
-@if(loaded){
+@if(loaded()){
   <div class="content">
-    <app-main-content [headerConfig]="headerConfig" (searchTermChange)="onSearchChange($event)"></app-main-content>
-    @if(solutionListCount !== 0){
+    <app-main-content [headerConfig]="headerConfig()" (searchTermChange)="onSearchChange($event)"></app-main-content>
+    @if(solutionList().length){
     <div class="observation-list">
-      @if(headerConfig?.showSearch){
+      @if(headerConfig()?.showSearch){
       <div class="select-filter">
         <mat-form-field>
           <mat-label>{{'ENTITY_FILTER' | translate}}</mat-label>
-          <mat-select (selectionChange)="changeEntityType($event.value)" [(ngModel)]="selectedEntityType">
-            @for(item of entityType;track $index){
+          <mat-select [ngModel]="selectedEntityType()" (ngModelChange)="changeEntityType($event)">
+            @for(item of entityType();track $index){
             <mat-option [value]="item">{{ item }}</mat-option>
             }
           </mat-select>
@@ -21,20 +21,20 @@
      [infiniteScrollThrottle]="300"
      (scrolled)="loadData()"
       >
-        @for(solution of solutionList;track $index){
+        @for(solution of solutionList();track solution?._id || $index){
         <div class="grid-item" (click)="navigateTo(solution)">
           <mat-card class="observation-card">
             <mat-card-content>
               <div class="card-header">
                 <h2 class="observation-name"><b>{{ solution?.name }}</b></h2>
-                @if(surveyPage){
+                @if(headerConfig()?.surveyPage){
                   <span [ngClass]="solution?.tagClass" class="label">{{ solution?.statusLabel }}</span>
                 }
                 @else{
                   <span [ngClass]="solution?.tagClass" class="label" *ngIf="solution?.statusLabel == 'Not Started'">{{ solution?.statusLabel }}</span>
                 }
               </div>
-              @if(surveyPage){
+              @if(headerConfig()?.surveyPage){
                 <div class="buttons">
                   <p>{{solution?.surveyExpiry}}</p>
                   <div class="download-wrapper">
@@ -63,30 +63,4 @@
   </div>
   }@else{
   <app-spinner></app-spinner>
-  }
-  
-  @if(isEntityFilterModalOpen){
-  <div class="modal">
-    <div class="modal-content">
-      <header class="d-flex align-items-center">
-        <h1 class="modal-title">{{'SELECT_ENTITY' | translate}}</h1>
-        <mat-icon class="close-btn" (click)="closeFilter()">close</mat-icon>
-      </header>
-      <div>
-        <ul>
-          <li *ngFor="let question of allEntities; let i = index">
-            <input type="radio" [(ngModel)]="selectedEntityName" class="modal-input" [id]="'question-' + i"
-              [value]="question.name" (change)="onEntityChange(i)">
-            <label [for]="'question-' + i">
-              {{ question.name }}
-            </label>
-          </li>
-        </ul>
-      </div>
-      <footer class="question-footer">
-        <button (click)="applyFilter()" class="apply-filter" [ngClass]="{'disabled-button': !isAnyEntitySelected}"
-          [disabled]="!isAnyEntitySelected">{{"SUBMIT" | translate}}</button>
-      </footer>
-    </div>
-  </div>
   }

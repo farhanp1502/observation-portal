@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SurveyFilterComponent } from './survey-filter.component';
+import { ReportsFilterModal } from './reports-filter-modal';
 
-describe('SurveyFilterComponent', () => {
-  let component: SurveyFilterComponent;
-  let fixture: ComponentFixture<SurveyFilterComponent>;
+describe('ReportsFilterModal', () => {
+  let component: ReportsFilterModal;
+  let fixture: ComponentFixture<ReportsFilterModal>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [SurveyFilterComponent]
+      declarations: [ReportsFilterModal]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(SurveyFilterComponent);
+    fixture = TestBed.createComponent(ReportsFilterModal);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
